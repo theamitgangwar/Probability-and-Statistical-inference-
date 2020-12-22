@@ -1,0 +1,46 @@
+#ANOVA
+#difference test involving more than two groups
+#variables selected mG1 and guardian.m
+#normality for mG1 is already proved
+#Differences more than 2 groups - Parametric Tests
+#installing packages
+needed_packages <- c("pastecs", "ggplot2", "psych", "semTools", "FSA", "sjstats", "userfriendlyscience")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+library(pastecs) #For creating descriptive statistic summaries
+library(ggplot2) #For creating histograms with more detail than plot
+library(psych) # Some useful descriptive functions
+library(semTools) #For skewness and kurtosis
+library(FSA) #For percentage
+library(sjstats) #To calculate effect size for t-test
+library(userfriendlyscience)
+
+#Get descriptive stastitics by group - output as a matrix
+psych::describeBy(student$mG1, student$guardian.m, mat=TRUE)
+
+#Conduct Bartlett's test for homogeneity of variance in library car - 
+#the null hypothesis is that variances in groups are equal so to assume 
+#homogeneity we would expect probability to not be statistically significant.
+stats::bartlett.test(mG1~guardian.m, data=student)
+
+#since p vlaue is not statistically significant(more than 0.05),we assume groups have homogeneity
+
+#Conduct ANOVA using the userfriendlyscience test oneway
+#In this case we can use Tukey as the post-hoc test option since variances in the groups are equal
+#If variances were not equal we would use Games-Howell
+install.packages('userfriendlyscience')
+library(userfriendlyscience)
+userfriendlyscience::oneway(as.factor(student$guardian.m),y=student$mG1,posthoc='Tukey')
+
+#use the aov function - same as one way but makes it easier to access values for reporting
+res2<-stats::aov(mG1~guardian.m, data = student)
+#Get the F statistic into a variable to make reporting easier
+fstat<-summary(res2)[[1]][["F value"]][[1]]
+fstat
+#Get the p value into a variable to make reporting easier
+aovpvalue<-summary(res2)[[1]][["Pr(>F)"]][[1]]
+aovpvalue
+#Calculate effect size by eta test
+aoveta<-sjstats::eta_sq(res2)[2]
+aoveta
+#Guidelines on effect size: 0.01 = small, 0.06 = moderate, 0.14 =large
