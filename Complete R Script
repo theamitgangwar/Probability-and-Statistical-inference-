@@ -13,16 +13,6 @@ student=read.csv('sperformance-dataset.csv')
 student[is.na(student)==TRUE]
 #there are no missing values in dataset
 
-#data cleaning
-#removing all 0's in grades with their mean values
-#student$mG1[student$mG1==0]= round(mean(student$mG1))
-#student$mG2[student$mG2==0]= round(mean(student$mG2))
-#student$mG3[student$mG3==0]= round(mean(student$mG3))
-
-#student$pG1[student$pG1==0]= round(mean(student$pG1))
-#student$pG2[student$pG2==0]= round(mean(student$pG2))
-#student$pG3[student$pG3==0]= round(mean(student$pG3))
-
 #===========================================================================================
 #Explore
 par(mar=c(1,1,1,1))
@@ -570,3 +560,5 @@ psych::alpha(col1)
 psych::alpha(col2)
 psych::alpha(col3)
 psych::alpha(col4)
+
+
