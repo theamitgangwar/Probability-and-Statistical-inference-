@@ -1,0 +1,69 @@
+#MULTIPLE REGRESSION MODEL (with two predictor to demonstrate Interaction effect)
+#variables chosen are mG1, mG2, and mG3
+#mG1 and mG2 are normal as checked earlier and are correlated(0.8890173)
+#we are trying to predict mG3 from mG1 and mG2
+
+#normality test for mG3
+#mG2 Generate Histogram
+gp <- ggplot(student, aes(x=student$mG2))
+gp <- gp + labs(x="mG3")
+gp <- gp + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gp <- gp + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gp <- gp + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG2, na.rm=TRUE), 
+                                   sd=sd(student$mG2, na.rm=TRUE)))
+gp
+
+#Create a qqplot
+qqnorm(student$mG3)
+qqline(student$mG3, col=2) 
+
+#Summary Statistics for mG2
+pastecs::stat.desc(student$mG3, basic=F)
+
+#Skew
+tpskew<-semTools::skew(student$mG3)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG3)
+tpkurt[1]/tpkurt[2]
+
+ztpmG3<- abs(scale(student$mG3))
+
+FSA::perc(as.numeric(ztpmG3), 1.96, "gt")
+FSA::perc(as.numeric(ztpmG3), 3.29, "gt")
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
+
+#correlation test between mG1 and mG3
+#Scatterplot
+scatter <- ggplot(student, aes(mG1, mG3))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation
+stats::cor.test(student$mG1, student$mG3, method='pearson')
+#mG1 and mG3 are proved to be correlated
+
+#correlation test between mG2 and mG3
+#Scatterplot
+scatter <- ggplot(student, aes(mG2, mG3))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation between mG2 and mG3
+stats::cor.test(student$mG2, student$mG3, method='pearson')
+#mG2 and mG3 are proved to be correlated
+
+#building multiple regression model
+model2<-lm(student$mG3~student$mG1+student$mG2)
+
+#Analysis of Variance Table
+anova(model2)
+
+#summary
+summary(model2)
+
+#coefficients
+lm.beta(model2)
+
+#Tidy output of all the required stats
+stargazer(model2, type="text")
