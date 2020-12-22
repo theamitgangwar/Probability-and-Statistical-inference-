@@ -1,0 +1,14 @@
+#setting workspace
+setwd('C:/Users/toami/OneDrive/Desktop/Data Science/Probability & Stats/CA1/dataset/student')
+
+#clearing workspace
+rm(list=ls())
+
+#============================================================================================
+#PREPARE
+#loading dataset
+student=read.csv('sperformance-dataset.csv')
+
+#checking for null values
+student[is.na(student)==TRUE]
+#there are no missing values found in dataset
