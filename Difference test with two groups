@@ -1,0 +1,41 @@
+#DIFFERNCE EFFECT with two groups
+#null hypothesis is that both male and female performed same in mG1
+#INDEPENDENT PARAMETRIC T-TEST
+#installing packages
+needed_packages <- c("pastecs", "ggplot2", "psych", "semTools", "FSA", "car", "coin", "rstatix")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+install.packages('effectsize')
+library(pastecs) #For creating descriptive statistic summaries
+library(ggplot2) #For creating histograms with more detail than plot
+library(psych) # Some useful descriptive functions
+library(semTools) #For skewness and kurtosis
+library(FSA) #For percentage
+library(car) # For Levene's test for homogeneity of variance 
+library(effectsize) #To calculate effect size for t-test
+par(mar=c(1,1,1,1))
+
+#normality for mG1 is already proved
+
+#Get descriptive stastitics by group - output as a matrix
+psych::describeBy(student$mG1, student$sex, mat=TRUE)
+
+#Conduct Levene's test for homogeneity of variance in library car - 
+#the null hypothesis is that variances in groups are equal so to assume homogeneity we woudl expect probaility to not be statistically significant.
+car::leveneTest(mG1 ~ sex, data=student)
+
+#A resulting p-value under 0.05 means that variances are not equal and than further parametric tests are not suitable. 
+
+#Conduct the t-test from package stats
+#In this case we can use the var.equal = TRUE option to specify equal variances and a pooled variance estimate
+stats::t.test(mG1~sex,var.equal=TRUE,data=student)
+
+#effect size
+#Looking to quantify the difference between the two groups
+res <- stats::t.test(mG1~sex,var.equal=TRUE,data=student)
+
+#Eta squared calculation
+effes=round((res$statistic*res$statistic)/((res$statistic*res$statistic)+(res$parameter)),3)
+effes
+
+#Guidelines on effect size: 0.01 = small, 0.06 = moderate, 0.14 =large
