@@ -1,0 +1,572 @@
+#setting workspace
+setwd('C:/Users/toami/OneDrive/Desktop/Data Science/Probability & Stats/CA1/dataset/student')
+
+#clearing workspace
+rm(list=ls())
+
+#============================================================================================
+#PREPARE
+#loading dataset
+student=read.csv('sperformance-dataset.csv')
+
+#checking for null values
+student[is.na(student)==TRUE]
+#there are no missing values in dataset
+
+#data cleaning
+#removing all 0's in grades with their mean values
+#student$mG1[student$mG1==0]= round(mean(student$mG1))
+#student$mG2[student$mG2==0]= round(mean(student$mG2))
+#student$mG3[student$mG3==0]= round(mean(student$mG3))
+
+#student$pG1[student$pG1==0]= round(mean(student$pG1))
+#student$pG2[student$pG2==0]= round(mean(student$pG2))
+#student$pG3[student$pG3==0]= round(mean(student$pG3))
+
+#===========================================================================================
+#Explore
+par(mar=c(1,1,1,1))
+
+#Quatitative data
+library("dplyr")
+colnames(select_if(student, is.numeric))
+
+#Qualitative data
+colnames(select_if(student, is.character))
+
+#Measures of central tendency
+#Mean
+mean(student$mG1)
+
+#Mode
+mode(student$mG1)
+stats_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+stats_mode(student$mG1)
+
+#Median
+median(student$mG1)
+
+#Measures of spread
+#Range
+range(student$mG1)
+
+#Quartiles
+quantile(student$mG1)
+
+#Standard Deviation
+sd(student$mG1)
+
+#Variance
+var(student$mG1)
+
+#Inter Quartile Range
+IQR(student$mG1)
+
+#Unusual Occurances
+#outliers
+Outlier = boxplot(student$pG3)$out
+print(unique(Outlier))
+
+#Frequency distribution for categorical data
+unique(student$sex)
+table(student$sex)
+barplot(table(student$sex))
+
+#Skewness
+tpskew<-semTools::skew(student$mG1)
+tpskew[1]/tpskew[2]
+
+#Kurtosis
+tpkurt<-semTools::kurtosis(student$mG1)
+tpkurt[1]/tpkurt[2]
+
+#----------------------------------------------------------------------------------------
+#NORMALITY TEST
+#Variable chosen is mG1
+library(ggplot2)
+gg <- ggplot(student, aes(x=student$mG1))
+gg <- gg + labs(x="mG1")
+gg <- gg + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gg <- gg + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gg <- gg + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG1, na.rm=TRUE), 
+                                   sd=sd(student$mG1, na.rm=TRUE)))
+#Plotting Histogram
+gg
+
+#Creating qqplot
+qqnorm(student$mG1)
+qqline(student$mG1, col=2)
+
+#Summary Statistics
+pastecs::stat.desc(student$mG1, basic=F)
+
+#skew
+tpskew<-semTools::skew(student$mG1)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG1)
+tpkurt[1]/tpkurt[2]
+
+
+ztpmG1<- abs(scale(student$mG2))
+
+#how much data fall outside 95% of region
+FSA::perc(as.numeric(ztpmG1), 1.96, "gt")
+
+#how much data fall outside 99.9% of region
+FSA::perc(as.numeric(ztpmG1), 3.29, "gt")
+
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
+
+#============================================================================
+#ANALYSIS
+#CORRELATION TEST
+#installing required packages
+needed_packages <- c("pastecs", "ggplot2", "semTools", "FSA")                                    
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed)                              
+library(pastecs) 
+library(semTools)
+
+#normality for mG1 is already proved
+
+#normality test for mG2
+#mG2 Generate Histogram
+gs <- ggplot(student, aes(x=student$mG2))
+gs <- gs + labs(x="mG2")
+gs <- gs + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gs <- gs + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gs <- gs + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG2, na.rm=TRUE), 
+                                   sd=sd(student$mG2, na.rm=TRUE)))
+gs
+
+#Create a qqplot
+qqnorm(student$mG2)
+qqline(student$mG2, col=2) 
+
+#Summary Statistics for mG2
+pastecs::stat.desc(student$mG2, basic=F)
+
+#Skew
+tpskew<-semTools::skew(student$mG2)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG2)
+tpkurt[1]/tpkurt[2]
+
+ztpmG2<- abs(scale(student$mG2))
+
+FSA::perc(as.numeric(ztpmG2), 1.96, "gt")
+FSA::perc(as.numeric(ztpmG2), 3.29, "gt")
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
+
+#correlation
+#Scatterplot
+scatter <- ggplot(student, aes(mG1, mG2))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation
+stats::cor.test(student$mG1, student$mG2, method='pearson')
+
+#---------------------------------------------------------------------------------------
+#DIFFERNCE EFFECT with two groups
+#null hypothesis is that both male and female performed same in mG1
+#INDEPENDENT PARAMETRIC T-TEST
+#installing packages
+needed_packages <- c("pastecs", "ggplot2", "psych", "semTools", "FSA", "car", "coin", "rstatix")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+install.packages('effectsize')
+library(pastecs) #For creating descriptive statistic summaries
+library(ggplot2) #For creating histograms with more detail than plot
+library(psych) # Some useful descriptive functions
+library(semTools) #For skewness and kurtosis
+library(FSA) #For percentage
+library(car) # For Levene's test for homogeneity of variance 
+library(effectsize) #To calculate effect size for t-test
+par(mar=c(1,1,1,1))
+
+#normality for mG1 is already proved
+
+#Get descriptive stastitics by group - output as a matrix
+psych::describeBy(student$mG1, student$sex, mat=TRUE)
+
+#Conduct Levene's test for homogeneity of variance in library car - 
+#the null hypothesis is that variances in groups are equal so to assume homogeneity we woudl expect probaility to not be statistically significant.
+car::leveneTest(mG1 ~ sex, data=student)
+
+#A resulting p-value under 0.05 means that variances are not equal and than further parametric tests are not suitable. 
+
+#Conduct the t-test from package stats
+#In this case we can use the var.equal = TRUE option to specify equal variances and a pooled variance estimate
+stats::t.test(mG1~sex,var.equal=TRUE,data=student)
+
+#effect size
+#Looking to quantify the difference between the two groups
+res <- stats::t.test(mG1~sex,var.equal=TRUE,data=student)
+
+#Eta squared calculation
+effes=round((res$statistic*res$statistic)/((res$statistic*res$statistic)+(res$parameter)),3)
+effes
+
+#Guidelines on effect size: 0.01 = small, 0.06 = moderate, 0.14 =large
+#----------------------------------------------------------------------------------------
+#ANOVA
+#difference test involving more than two groups
+#variables selected mG1 and guardian.m
+#normality for mG1 is already proved
+#Differences more than 2 groups - Parametric Tests
+#installing packages
+needed_packages <- c("pastecs", "ggplot2", "psych", "semTools", "FSA", "sjstats", "userfriendlyscience")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+library(pastecs) #For creating descriptive statistic summaries
+library(ggplot2) #For creating histograms with more detail than plot
+library(psych) # Some useful descriptive functions
+library(semTools) #For skewness and kurtosis
+library(FSA) #For percentage
+library(sjstats) #To calculate effect size for t-test
+library(userfriendlyscience)
+
+#Get descriptive stastitics by group - output as a matrix
+psych::describeBy(student$mG1, student$guardian.m, mat=TRUE)
+
+#Conduct Bartlett's test for homogeneity of variance in library car - 
+#the null hypothesis is that variances in groups are equal so to assume 
+#homogeneity we would expect probability to not be statistically significant.
+stats::bartlett.test(mG1~guardian.m, data=student)
+
+#since p vlaue is not statistically significant(more than 0.05),we assume groups have homogeneity
+
+#Conduct ANOVA using the userfriendlyscience test oneway
+#In this case we can use Tukey as the post-hoc test option since variances in the groups are equal
+#If variances were not equal we would use Games-Howell
+install.packages('userfriendlyscience')
+library(userfriendlyscience)
+userfriendlyscience::oneway(as.factor(student$guardian.m),y=student$mG1,posthoc='Tukey')
+
+#use the aov function - same as one way but makes it easier to access values for reporting
+res2<-stats::aov(mG1~guardian.m, data = student)
+#Get the F statistic into a variable to make reporting easier
+fstat<-summary(res2)[[1]][["F value"]][[1]]
+fstat
+#Get the p value into a variable to make reporting easier
+aovpvalue<-summary(res2)[[1]][["Pr(>F)"]][[1]]
+aovpvalue
+#Calculate effect size by eta test
+aoveta<-sjstats::eta_sq(res2)[2]
+aoveta
+#Guidelines on effect size: 0.01 = small, 0.06 = moderate, 0.14 =large
+
+#===============================================================================
+#MULTIPLE REGRESSION MODEL (with two predictor and also demonstration of differential effect)
+#installing required packages
+needed_packages <- c("foreign", "stats", "lm.beta", "stargazer", "ggplot2")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+library(stats)
+library(ggplot2)
+library(foreign) #To work with SPSS data
+library(lm.beta) #Will allow us to isolate the beta co-efficients
+library(stargazer)#For formatting outputs/tables
+
+#variables chosen are mG1, mG2, and sex
+#mG1 and mG2 are normal as checked earlier and are correlated(0.8890173)
+#we are trying to predict mG2 from mG1 and sex
+
+#building multiple regression model
+model1<-lm(student$mG2~student$mG1+student$sex)
+
+#Analysis of Variance Table
+anova(model1)
+
+#summary
+summary(model1)
+
+#coefficients
+lm.beta(model1)
+
+#Tidy output of all the required stats
+stargazer(model1, type="text") 
+
+#---------------------------------------------------------------------------------------
+#MULTIPLE REGRESSION MODEL (with two predictor to demonstrate Integration effect)
+#variables chosen are mG1, mG2, and mG3
+#mG1 and mG2 are normal as checked earlier and are correlated(0.8890173)
+#we are trying to predict mG3 from mG1 and mG2
+
+#normality test for mG3
+#mG2 Generate Histogram
+gp <- ggplot(student, aes(x=student$mG2))
+gp <- gp + labs(x="mG3")
+gp <- gp + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gp <- gp + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gp <- gp + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG2, na.rm=TRUE), 
+                                   sd=sd(student$mG2, na.rm=TRUE)))
+gp
+
+#Create a qqplot
+qqnorm(student$mG3)
+qqline(student$mG3, col=2) 
+
+#Summary Statistics for mG2
+pastecs::stat.desc(student$mG3, basic=F)
+
+#Skew
+tpskew<-semTools::skew(student$mG3)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG3)
+tpkurt[1]/tpkurt[2]
+
+ztpmG3<- abs(scale(student$mG3))
+
+FSA::perc(as.numeric(ztpmG3), 1.96, "gt")
+FSA::perc(as.numeric(ztpmG3), 3.29, "gt")
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
+
+#correlation test between mG1 and mG3
+#Scatterplot
+scatter <- ggplot(student, aes(mG1, mG3))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation
+stats::cor.test(student$mG1, student$mG3, method='pearson')
+#mG1 and mG3 are proved to be correlated
+
+#correlation test between mG2 and mG3
+#Scatterplot
+scatter <- ggplot(student, aes(mG2, mG3))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation between mG2 and mG3
+stats::cor.test(student$mG2, student$mG3, method='pearson')
+#mG2 and mG3 are proved to be correlated
+
+#building multiple regression model
+model2<-lm(student$mG3~student$mG1+student$mG2)
+
+#Analysis of Variance Table
+anova(model2)
+
+#summary
+summary(model2)
+
+#coefficients
+lm.beta(model2)
+
+#Tidy output of all the required stats
+stargazer(model2, type="text")
+
+#==============================================================================
+#LOGISTIC REGRESSION
+#question does a child attend extra paid classes when he have family and school support.
+# variables schoolsup.m , famsup.m and target variable is paid.m
+
+#installing packages
+needed_packages <- c("foreign",  "Epi", "arm", "DescTools", "stargazer", "lmtest",  "car", "generalhoslem", "regclass")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed, repos = "http://cran.us.r-project.org") 
+library(Epi)#ROC Curve
+library(DescTools)#Pseudo Rsquare statistics
+library(stargazer)
+library(foreign)#read SPSS file.
+library(arm)
+library(lmtest)
+library(car)
+library(generalhoslem)
+library("regclass")
+
+#Check your proportions of the outcome variable for bias - are these representative?
+class(student)
+table(student$paid.m)
+
+#coverting variables to factor datatype
+student$paid.m=as.factor(student$paid.m)
+student$famsup.m=as.factor(student$famsup.m)
+student$schoolsup.m=as.factor(student$schoolsup.m)
+
+#building model
+logmodel1=glm(paid.m~famsup.m+schoolsup.m, data = student, na.action = na.exclude, family = binomial(link=logit))
+
+#summary of the model
+summary(logmodel1)
+
+#Interpret the model
+coefs <- coef(logmodel1)
+coefs
+
+#Output the sensitivity, specificity, and ROC plot
+Epi::ROC(form=student$paid.m ~ student$famsup.m+student$schoolsup.m, plot="ROC")
+
+#Summary of the model with co-efficients
+stargazer(logmodel1, type="text")
+
+#Exponentiate the co-efficients
+exp(coefficients(logmodel1))
+
+## odds ratios 
+cbind(Estimate=round(coef(logmodel1),4),
+      OR=round(exp(coef(logmodel1)),4))
+
+#Check the assumption of linearity of independent variables and log odds 
+#using a Hosmer-Lemeshow test, if this is not statistically significant we are ok
+generalhoslem::logitgof(student$paid.m, fitted(logmodel1))
+
+#Collinearity
+vifmodel<-car::vif(logmodel1)#You can ignore the warning messages, GVIF^(1/(2*Df)) is the value of interest
+vifmodel
+
+#Tolerance
+1/vifmodel
+
+#===============================================================================
+#DIMENSION REDUCTION
+#selecting Quantitative variables from dataset
+raqData=Filter(is.numeric, student)
+colnames(raqData)=c(1:29)
+
+#loading packages
+if(length(not_installed)) install.packages(not_installed, repos = "http://cran.us.r-project.org") 
+library(psych)
+library(REdaS)
+library(Hmisc)
+library(corrplot)
+library(ggcorrplot)
+library(factoextra)library(nFactors)
+
+#Step 1: Screen the correlation matrix
+raqMatrix<-cor(raqData)
+round(raqMatrix, 2)
+
+Hmisc::rcorr(as.matrix(raqData))
+
+#Using ggcorrplot
+p.mat <- ggcorrplot::cor_pmat(raqData)
+ggcorrplot::ggcorrplot(raqMatrix, title = "Correlation matrix for student data")
+
+#Visualization using numbers
+corrplot::corrplot(raqMatrix, method="number")
+
+#Step 2: Check if data is suitable - look at the relevant Statistics ###Bartlett’s test
+psych::cortest.bartlett(raqData)
+
+psych::cortest.bartlett(raqMatrix, n=nrow(raqData))
+
+REdaS::KMOS(raqData)
+
+#Determinant :
+det(raqMatrix)
+
+#Step 3: Do the Dimension Reduction (PRINCIPAL COMPONENTS ANALYSIS)
+pc1 <-  principal(raqData, nfactors = 29, rotate = "none")
+pc1 <-  principal(raqData, nfactors = length(raqData), rotate = "none")
+pc1#output all details of the PCA
+
+#Step 4: Decide which components to retain (PRINCIPAL COMPONENTS ANALYSIS)
+#Create the scree plot
+plot(pc1$values, type = "b") 
+
+#Print the variance explained by each component
+pc1$Vaccounted 
+
+#Print the Eigenvalues
+pcf=princomp(raqData)
+factoextra::get_eigenvalue(pcf)
+
+#Visualize the Eigenvalues
+factoextra::fviz_eig(pcf, addlabels = TRUE, ylim = c(0, 50))
+
+factoextra::fviz_pca_var(pcf, col.var = "cos2",
+                         gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+                         repel = TRUE # Avoid text overlapping
+)
+
+#Print the loadings above the level of 0.3
+psych::print.psych(pc1, cut = 0.3, sort = TRUE)
+
+#create a diagram showing the components and how the manifest variables load
+fa.diagram(pc1) 
+
+#Show the loadings of variables on to components
+fa.sort(pc1$loading)
+
+#Output the communalities of variables across components (will be one for PCA since all the variance is used)
+pc1$communality 
+
+#Visualize contribution of variables to each component
+var <- factoextra::get_pca_var(pcf)
+corrplot::corrplot(var$contrib, is.corr=FALSE) 
+
+# Contributions of variables to PC1
+factoextra::fviz_contrib(pcf, choice = "var", axes = 1, top = 10)
+
+# Contributions of variables to PC2
+factoextra::fviz_contrib(pcf, choice = "var", axes = 2, top = 10)
+
+#Step 5: Apply rotation
+
+#Apply rotation to try to refine the component structure
+pc2 <-  principal(raqData, nfactors = 4, rotate = "varimax")#Extracting 4 factors
+#output the components
+psych::print.psych(pc2, cut = 0.3, sort = TRUE)
+
+#output the communalities
+pc2$communality
+
+#Step 3: Do the dimension reduction and Step 4: Decide which factors/components to retain (FACTOR ANALYSIS)
+
+#Factor Analysis - the default here is principal axis factoring fm=pa
+#If we know our data going in is normally distributed we use maximum likelihood
+facsol <- psych::fa(raqMatrix, nfactors=4, obs=NA, n.iter=1, rotate="varimax", fm="pa")
+
+#Create your scree plot
+plot(facsol$values, type = "b") #scree plot
+
+
+#Print the Variance accounted for by each factor/component
+facsol$Vaccounted
+
+#Output the Eigenvalues
+facsol$values 
+
+#Print the components with loadings
+psych::print.psych(facsol,cut=0.3, sort=TRUE)
+
+#Print sorted list of loadings
+fa.sort(facsol$loading)
+
+#create a diagram showing the factors and how the manifest variables load
+fa.diagram(facsol)
+ggsave("plot1.png", width=6, height=3, dpi=1000)
+
+#Step 5: Apply rotation
+#Apply rotation to try to refine the component structure
+facsolrot <-  principal(raqMatrix, rotate = "varimax")
+#output the components
+psych::print.psych(facsolrot, cut = 0.3, sort = TRUE)
+
+#output the communalities
+facsolrot$communality
+
+#Step 6: Reliability Analysis
+#If you know that variables are grouped, test each group as a separate scale
+col1<-raqData[,c(12,25)]
+col2 <- raqData[, c(20,7,22,9,21,8)]
+col3 <- raqData[, c(11,24,23,10,18,5)]
+col4 <- raqData[, c(14,15,16,27,28,29,6,2,19,3)]
+
+#Output our Cronbach Alpha values
+psych::alpha(col1)
+psych::alpha(col2)
+psych::alpha(col3)
+psych::alpha(col4)
