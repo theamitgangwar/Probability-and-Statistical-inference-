@@ -1,0 +1,29 @@
+#MULTIPLE REGRESSION MODEL (with two predictor and also demonstration of differential effect)
+#installing required packages
+needed_packages <- c("foreign", "stats", "lm.beta", "stargazer", "ggplot2")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed) 
+library(stats)
+library(ggplot2)
+library(foreign) #To work with SPSS data
+library(lm.beta) #Will allow us to isolate the beta co-efficients
+library(stargazer)#For formatting outputs/tables
+
+#variables chosen are mG1, mG2, and sex
+#mG1 and mG2 are normal as checked earlier and are correlated(0.8890173)
+#we are trying to predict mG2 from mG1 and sex
+
+#building multiple regression model
+model1<-lm(student$mG2~student$mG1+student$sex)
+
+#Analysis of Variance Table
+anova(model1)
+
+#summary
+summary(model1)
+
+#coefficients
+lm.beta(model1)
+
+#Tidy output of all the required stats
+stargazer(model1, type="text") 
