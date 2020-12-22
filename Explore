@@ -1,0 +1,98 @@
+#Explore
+par(mar=c(1,1,1,1))
+
+#Quatitative data
+library("dplyr")
+colnames(select_if(student, is.numeric))
+
+#Qualitative data
+colnames(select_if(student, is.character))
+
+#Measures of central tendency
+#Mean
+mean(student$mG1)
+
+#Mode
+mode(student$mG1)
+stats_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+stats_mode(student$mG1)
+
+#Median
+median(student$mG1)
+
+#Measures of spread
+#Range
+range(student$mG1)
+
+#Quartiles
+quantile(student$mG1)
+
+#Standard Deviation
+sd(student$mG1)
+
+#Variance
+var(student$mG1)
+
+#Inter Quartile Range
+IQR(student$mG1)
+
+#Unusual Occurances
+#outliers
+Outlier = boxplot(student$pG3)$out
+print(unique(Outlier))
+
+#Frequency distribution for categorical data
+unique(student$sex)
+table(student$sex)
+barplot(table(student$sex))
+
+#Skewness
+tpskew<-semTools::skew(student$mG1)
+tpskew[1]/tpskew[2]
+
+#Kurtosis
+tpkurt<-semTools::kurtosis(student$mG1)
+tpkurt[1]/tpkurt[2]
+
+#----------------------------------------------------------------------------------------
+#NORMALITY TEST
+#Variable chosen is mG1
+library(ggplot2)
+gg <- ggplot(student, aes(x=student$mG1))
+gg <- gg + labs(x="mG1")
+gg <- gg + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gg <- gg + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gg <- gg + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG1, na.rm=TRUE), 
+                                   sd=sd(student$mG1, na.rm=TRUE)))
+#Plotting Histogram
+gg
+
+#Creating qqplot
+qqnorm(student$mG1)
+qqline(student$mG1, col=2)
+
+#Summary Statistics
+pastecs::stat.desc(student$mG1, basic=F)
+
+#skew
+tpskew<-semTools::skew(student$mG1)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG1)
+tpkurt[1]/tpkurt[2]
+
+
+ztpmG1<- abs(scale(student$mG2))
+
+#how much data fall outside 95% of region
+FSA::perc(as.numeric(ztpmG1), 1.96, "gt")
+
+#how much data fall outside 99.9% of region
+FSA::perc(as.numeric(ztpmG1), 3.29, "gt")
+
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
