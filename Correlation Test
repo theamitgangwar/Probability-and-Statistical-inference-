@@ -1,0 +1,50 @@
+#ANALYSIS
+#CORRELATION TEST
+#installing required packages
+needed_packages <- c("pastecs", "ggplot2", "semTools", "FSA")                                    
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed)                              
+library(pastecs) 
+library(semTools)
+
+#normality for mG1 is already proved
+
+#normality test for mG2
+#mG2 Generate Histogram
+gs <- ggplot(student, aes(x=student$mG2))
+gs <- gs + labs(x="mG2")
+gs <- gs + geom_histogram(binwidth=2, colour="black", aes(y=..density.., fill=..count..))
+gs <- gs + scale_fill_gradient("Count", low="#DCDCDC", high="#7C7C7C")
+gs <- gs + stat_function(fun=dnorm, color="red",
+                         args=list(mean=mean(student$mG2, na.rm=TRUE), 
+                                   sd=sd(student$mG2, na.rm=TRUE)))
+gs
+
+#Create a qqplot
+qqnorm(student$mG2)
+qqline(student$mG2, col=2) 
+
+#Summary Statistics for mG2
+pastecs::stat.desc(student$mG2, basic=F)
+
+#Skew
+tpskew<-semTools::skew(student$mG2)
+tpskew[1]/tpskew[2]
+
+#kurtosis
+tpkurt<-semTools::kurtosis(student$mG2)
+tpkurt[1]/tpkurt[2]
+
+ztpmG2<- abs(scale(student$mG2))
+
+FSA::perc(as.numeric(ztpmG2), 1.96, "gt")
+FSA::perc(as.numeric(ztpmG2), 3.29, "gt")
+#since 0% data fall outside 99.9% of normal curve region, it can be assumed as normal
+
+#correlation
+#Scatterplot
+scatter <- ggplot(student, aes(mG1, mG2))
+scatter + geom_point() + geom_smooth(method = "lm", colour = "Red", se = F) + labs(x = "mG1", y = "mG2") 
+
+#Pearson Correlation
+stats::cor.test(student$mG1, student$mG2, method='pearson')
