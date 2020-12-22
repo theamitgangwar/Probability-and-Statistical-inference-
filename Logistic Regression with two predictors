@@ -1,0 +1,60 @@
+#LOGISTIC REGRESSION
+#question does a child attend extra paid classes when he have family and school support.
+# variables schoolsup.m , famsup.m and target variable is paid.m
+
+#installing packages
+needed_packages <- c("foreign",  "Epi", "arm", "DescTools", "stargazer", "lmtest",  "car", "generalhoslem", "regclass")                      
+not_installed <- needed_packages[!(needed_packages %in% installed.packages()[ , "Package"])]    
+if(length(not_installed)) install.packages(not_installed, repos = "http://cran.us.r-project.org") 
+library(Epi)#ROC Curve
+library(DescTools)#Pseudo Rsquare statistics
+library(stargazer)
+library(foreign)#read SPSS file.
+library(arm)
+library(lmtest)
+library(car)
+library(generalhoslem)
+library("regclass")
+
+#Check your proportions of the outcome variable for bias - are these representative?
+class(student)
+table(student$paid.m)
+
+#coverting variables to factor datatype
+student$paid.m=as.factor(student$paid.m)
+student$famsup.m=as.factor(student$famsup.m)
+student$schoolsup.m=as.factor(student$schoolsup.m)
+
+#building model
+logmodel1=glm(paid.m~famsup.m+schoolsup.m, data = student, na.action = na.exclude, family = binomial(link=logit))
+
+#summary of the model
+summary(logmodel1)
+
+#Interpret the model
+coefs <- coef(logmodel1)
+coefs
+
+#Output the sensitivity, specificity, and ROC plot
+Epi::ROC(form=student$paid.m ~ student$famsup.m+student$schoolsup.m, plot="ROC")
+
+#Summary of the model with co-efficients
+stargazer(logmodel1, type="text")
+
+#Exponentiate the co-efficients
+exp(coefficients(logmodel1))
+
+## odds ratios 
+cbind(Estimate=round(coef(logmodel1),4),
+      OR=round(exp(coef(logmodel1)),4))
+
+#Check the assumption of linearity of independent variables and log odds 
+#using a Hosmer-Lemeshow test, if this is not statistically significant we are ok
+generalhoslem::logitgof(student$paid.m, fitted(logmodel1))
+
+#Collinearity
+vifmodel<-car::vif(logmodel1)#You can ignore the warning messages, GVIF^(1/(2*Df)) is the value of interest
+vifmodel
+
+#Tolerance
+1/vifmodel
